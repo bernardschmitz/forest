@@ -20,7 +20,7 @@
 			<input type="button" value="Run Simulation" onClick="run()" />
 		</form>
 
-		<br/>
+			<p id="results"></p>
 
 		<canvas id="myCanvas" width="400" height="300" style="border:1px solid #d3d3d3;">
 			Your browser does not support the HTML5 canvas tag.</canvas>
@@ -196,7 +196,7 @@
 
 					if(tests > 0) {
 						results.push(runOneTest(draw, density, radius, ctx, width, height));
-						setTimeout(runTests, 5);
+						setTimeout(runTests, 0);
 					}
 					else {
 						done(results);
@@ -217,23 +217,21 @@
 			}
 
 
-			function start(draw, N, density, radius, ctx, width, height) { 
+			function displayResults(N, results) {
 
-				console.log('start');
-
-				runSightTests(draw, N, density, radius, ctx, width, height, 
-					function(results) {
-
-						var seen = 0;
-						for(var i=0; i<results.length; i++) {
-							if(results[i][0]) {
-								seen++;
-							}
-						}
-
-						console.log(seen, N, seen*100/N);	
+				var seen = 0;
+				for(var i=0; i<results.length; i++) {
+					if(results[i][0]) {
+						seen++;
 					}
-				);
+				}
+
+				var percent = seen*100/N;
+
+				console.log(seen, N, percent);	
+
+				var r = document.getElementById('results');
+				r.innerHTML = 'Friend seen '+percent.toPrecision(3)+'%';
 			}
 
 
@@ -246,13 +244,16 @@
 				var N = parseInt(document.getElementById('N').value);
 				var draw = document.getElementById('draw').checked;
 
+				var r = document.getElementById('results');
+				r.innerHTML = 'Friend seen --.-%';
 
 				var width = 400;
 				var height = 300;
 
 				console.log(density, radius, N, draw, width, height);
 
-				setTimeout(start(draw, N, density, radius, ctx, width, height), 10);
+				runSightTests(draw, N, density, radius, ctx, width, height, 
+					function(results) { displayResults(N, results); });
 
 
 			}
