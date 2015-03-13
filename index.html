@@ -86,6 +86,14 @@
 				ctx.stroke();
 			}
 
+			function distance(from, to) {
+
+				var dx = to[0] - from[0];
+				var dy = to[1] - from[1];
+
+				return Math.sqrt(dx*dx+dy*dy);
+			}
+
 			function distancePointLine(point, from, to) {
 
 				var dx = to[0] - from[0];
@@ -128,29 +136,90 @@
 			}
 
 
+			function runOneTest(draw, density, radius, ctx, width, height) {
+
+				var forest = generateForest(density, radius, width, height);
+				var personA = generatePerson(forest, width, height);
+				var personB = generatePerson(forest, width, height);
+				var see = canSee(personA, personB, forest);
+
+				if(draw) {
+					ctx.fillStyle = 'white';
+					ctx.fillRect(0,0,width,height);
+
+					drawTrees(ctx, forest, 'black');	
+					drawPerson(ctx, personA, 'blue');
+					drawPerson(ctx, personB, 'green');
+
+					if(see)
+						drawSightLine(ctx, personA, personB, 'green');
+					else
+						drawSightLine(ctx, personA, personB, 'red');
+				}
+
+
+
+				return [see, distance(personA, personB)];
+			}
+
+
+
+			function runSightTests(draw, tests, density, radius, ctx, width, height, done) {
+
+				var results = [];
+
+
+				var runTests = function() {
+
+					tests--;
+
+					if(tests > 0) {
+						results.push(runOneTest(draw, density, radius, ctx, width, height));
+						setTimeout(runTests, 5);
+					}
+					else {
+						done(results);
+					}
+				};
+
+
+				if(draw)
+					runTests();
+				else {
+
+					for(var i=0; i<tests; i++) {
+						results.push(runOneTest(draw, density, radius, ctx, width, height));
+					}
+
+					done(results);
+				}
+			}
+
+
 
 			var width = 400;
 			var height = 300;
 
 			var density = 0.1;
 			var radius = 5;
+
+			var N = 100;
+
+			var tests = N;
+
+			runSightTests(true, tests, density, radius, ctx, width, height, 
 			
+			function(results) {
 
-			var forest = generateForest(density, radius, width, height);
-			var personA = generatePerson(forest, width, height);
-			var personB = generatePerson(forest, width, height);
+				var seen = 0;
+				for(var i=0; i<results.length; i++) {
+					if(results[i][0]) {
+						seen++;
+					}
+				}
 
-			drawTrees(ctx, forest, 'black');	
-			drawPerson(ctx, personA, 'blue');
-			drawPerson(ctx, personB, 'green');
-
-
-			if(canSee(personA, personB, forest))
-				drawSightLine(ctx, personA, personB, 'green');
-			else
-				drawSightLine(ctx, personA, personB, 'red');
-
-
+				console.log(seen, N, seen*100/tests);	
+			});
 
 		</script> 
 
