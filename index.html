@@ -2,8 +2,28 @@
 <html>
 	<body>
 
+		<h1>Forest Visibility Simulation</h1>
+
+		<form>
+			<label for="density">Wood Density</label>
+			<input type="text" name="density" id="density" value="0.1"/>
+			<br/>
+			<label for="radius">Trunk Radius</label>
+			<input type="text" name="radius" id="radius" value="5"/>
+			<br/>
+			<label for="N">Trials</label>
+			<input type="text" name="N" id="N" value="100"/>
+			<br/>
+			<label for="draw">Draw</label>
+			<input type="checkbox" name="draw" id="draw" checked="checked"/>
+			<br/>
+			<input type="button" value="Run Simulation" onClick="run()" />
+		</form>
+
+		<br/>
+
 		<canvas id="myCanvas" width="400" height="300" style="border:1px solid #d3d3d3;">
-		Your browser does not support the HTML5 canvas tag.</canvas>
+			Your browser does not support the HTML5 canvas tag.</canvas>
 
 		<script>
 
@@ -164,10 +184,11 @@
 
 
 
-			function runSightTests(draw, tests, density, radius, ctx, width, height, done) {
+			function runSightTests(draw, N, density, radius, ctx, width, height, done) {
 
 				var results = [];
 
+				var tests = N;
 
 				var runTests = function() {
 
@@ -187,7 +208,7 @@
 					runTests();
 				else {
 
-					for(var i=0; i<tests; i++) {
+					for(var i=0; i<N; i++) {
 						results.push(runOneTest(draw, density, radius, ctx, width, height));
 					}
 
@@ -196,30 +217,45 @@
 			}
 
 
+			function start(draw, N, density, radius, ctx, width, height) { 
 
-			var width = 400;
-			var height = 300;
+				console.log('start');
 
-			var density = 0.1;
-			var radius = 5;
+				runSightTests(draw, N, density, radius, ctx, width, height, 
+					function(results) {
 
-			var N = 100;
+						var seen = 0;
+						for(var i=0; i<results.length; i++) {
+							if(results[i][0]) {
+								seen++;
+							}
+						}
 
-			var tests = N;
-
-			runSightTests(true, tests, density, radius, ctx, width, height, 
-			
-			function(results) {
-
-				var seen = 0;
-				for(var i=0; i<results.length; i++) {
-					if(results[i][0]) {
-						seen++;
+						console.log(seen, N, seen*100/N);	
 					}
-				}
+				);
+			}
 
-				console.log(seen, N, seen*100/tests);	
-			});
+
+			function run() {
+
+				console.log('run');
+
+				var density = parseFloat(document.getElementById('density').value);
+				var radius = parseInt(document.getElementById('radius').value);
+				var N = parseInt(document.getElementById('N').value);
+				var draw = document.getElementById('draw').checked;
+
+
+				var width = 400;
+				var height = 300;
+
+				console.log(density, radius, N, draw, width, height);
+
+				setTimeout(start(draw, N, density, radius, ctx, width, height), 10);
+
+
+			}
 
 		</script> 
 
