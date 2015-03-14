@@ -217,7 +217,7 @@
 
 					tests--;
 
-					if(tests > 0) {
+					if(tests >= 0) {
 						results.push(runOneTest(draw, density, radius, ctx, width, height));
 						setTimeout(runTests, 0);
 					}
