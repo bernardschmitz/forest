@@ -26,7 +26,7 @@
 
 		<p id="results" style="width:400px;"></p>
 
-		<canvas id="myCanvas" width="400" height="300" style="border:1px solid #d3d3d3;">
+		<canvas id="myCanvas" width="800" height="600" style="border:1px solid #d3d3d3;">
 			Your browser does not support the HTML5 canvas tag.</canvas>
 		
 		</div>
@@ -217,7 +217,7 @@
 
 					tests--;
 
-					if(tests > 0) {
+					if(tests >= 0) {
 						results.push(runOneTest(draw, density, radius, ctx, width, height));
 						setTimeout(runTests, 0);
 					}
@@ -298,8 +298,8 @@
 				var r = document.getElementById('results');
 				r.innerHTML = 'Friend seen --.-%';
 
-				var width = 400;
-				var height = 300;
+				var width = 800;
+				var height = 600;
 
 				console.log(density, radius, N, draw, width, height);
 
