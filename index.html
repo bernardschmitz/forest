@@ -1,9 +1,13 @@
 <!DOCTYPE html>
 <html>
+	<head>
+		<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	</head>
 	<body>
 
 		<h1>Forest Visibility Simulation</h1>
 
+		<div style="float: left;">
 		<form>
 			<label for="density">Wood Density</label>
 			<input type="text" name="density" id="density" value="0.1"/>
@@ -20,12 +24,23 @@
 			<input type="button" value="Run Simulation" onClick="run()" />
 		</form>
 
-			<p id="results"></p>
+		<p id="results" style="width:400px;"></p>
 
 		<canvas id="myCanvas" width="400" height="300" style="border:1px solid #d3d3d3;">
 			Your browser does not support the HTML5 canvas tag.</canvas>
+		
+		</div>
 
+		<div style="float:right;">
+
+			<div id="seen_chart" style="width: 400px; height: 300px;"></div>
+			<div id="not_seen_chart" style="width: 400px; height: 300px;"></div>
+
+		</div>
+	
 		<script>
+
+			google.load("visualization", "1", {packages:["corechart"]});
 
 			var c = document.getElementById("myCanvas");
 			var ctx = c.getContext("2d");
@@ -217,6 +232,31 @@
 			}
 
 
+			function drawHistogram(data) {
+
+				var qq1 = [['Distance']];
+				var qq2 = [['Distance']];
+
+				for(var i=0; i<data.length; i++) {
+					if(data[i][0]) 
+						qq1.push([data[i][1]]);
+					else
+						qq2.push([data[i][1]]);
+
+				}
+
+				var q = google.visualization.arrayToDataTable(qq1);
+				var chart1 = new google.visualization.Histogram(document.getElementById('seen_chart'));
+				chart1.draw(q, { title: 'Seen', legend : { position: 'none'} });
+
+
+				var q2= google.visualization.arrayToDataTable(qq2);
+				var chart2 = new google.visualization.Histogram(document.getElementById('not_seen_chart'));
+				chart2.draw(q2, { title: 'Not Seen', legend : { position: 'none'} });
+
+			}
+
+
 			function displayResults(N, results) {
 
 				var seen = 0;
@@ -232,6 +272,9 @@
 
 				var r = document.getElementById('results');
 				r.innerHTML = 'Friend seen '+percent.toPrecision(3)+'%';
+
+
+				drawHistogram(results);	
 			}
 
 
