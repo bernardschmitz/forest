@@ -58,14 +58,153 @@
 						return x >= this.x && x < this.x+this.w && 
 							y >= this.y && y < this.y+this.h;	
 					},
+					overlapAABB: function(aabb) {
+						return this.containsPoint(aabb.x, aabb.y) ||
+							this.containsPoint(aabb.x+aabb.w-1, aabb.y) ||
+							this.containsPoint(aabb.x, aabb.y+aabb.h-1) ||
+							this.containsPoint(aabb.x+aabb.w-1, aabb.y+aabb.h-1);
+					},
 					containsAABB: function(aabb) {
-
+						return this.containsPoint(aabb.x, aabb.y) &&
+							this.containsPoint(aabb.x+aabb.w-1, aabb.y+aabb.h-1);
+					},
+					containsCircle: function(circle) {
+						return this.containsPoint(circle[0]-circle[2], circle[1]) &&
+							this.containsPoint(circle[0], circle[1]-circle[2]) &&
+							this.containsPoint(circle[0]+circle[2], circle[1]) &&
+							this.containsPoint(circle[0], circle[1]+circle[2]);
 					}
 
 				};
 			}
 
 
+			function makeQuadTree(x,y,w,h) {
+
+				return {
+					boundary : makeAABB(x,y,w,h),
+					children : null,
+					data : [],
+
+					insert : function(circle) {
+							
+						if(!this.boundary.containsCircle(circle))
+							return false;
+
+						if(this.data.length < 4) {
+							this.data.push(circle);
+							return true;
+						}
+
+						if(this.children == null)
+							this.subdivide();
+
+						if(this.children[0].insert(circle)) return true;
+						if(this.children[1].insert(circle)) return true;
+						if(this.children[2].insert(circle)) return true;
+						if(this.children[3].insert(circle)) return true;
+
+						// if circle not inserted it's probably on a boundary
+						this.data.push(circle);
+						return true;
+					},
+
+					subdivide : function() {
+
+						var x = this.boundary.x;
+						var y = this.boundary.y;
+						var w = this.boundary.w / 2;
+						var h = this.boundary.h / 2;
+						
+						this.children = [];
+						this.children.push(makeQuadTree(x, y, w, h));
+						this.children.push(makeQuadTree(x+w, y, w, h));
+						this.children.push(makeQuadTree(x, y+h, w, h));
+						this.children.push(makeQuadTree(x+w, y+h, w, h));
+					}
+
+				};
+
+			}
+
+			function drawQuadTree(tree) {
+
+				ctx.strokeStyle = 'red';
+				ctx.strokeRect(tree.boundary.x, tree.boundary.y, tree.boundary.w, tree.boundary.h);
+
+				ctx.fillStyle = getRndColor();
+				for(var i=0; i<tree.data.length; i++) {
+
+					ctx.beginPath();
+					ctx.arc(tree.data[i][0], tree.data[i][1], tree.data[i][2], 0, 2*Math.PI);
+					ctx.fill();
+
+				}
+
+				if(tree.children == null)
+					return;
+
+				drawQuadTree(tree.children[0]);
+				drawQuadTree(tree.children[1]);
+				drawQuadTree(tree.children[2]);
+				drawQuadTree(tree.children[3]);
+			}
+
+
+			var tree = makeQuadTree(0, 0, 800, 600);
+
+			var cir = [];
+
+			var K = 1000;
+
+			function go() {
+				var circle = [ Math.random()*800, Math.random()*600, 5 ];
+
+				if(!tree.insert(circle)) {
+					cir.push(circle);
+
+				}
+
+				ctx.fillStyle = 'white';
+				ctx.fillRect(0,0,800,600);
+
+				drawQuadTree(tree);
+
+				for(var i=0; i<cir.length; i++) {
+					ctx.strokeStyle = 'green';
+					ctx.beginPath();
+					ctx.arc(cir[i][0], cir[i][1], cir[i][2], 0, 2*Math.PI);
+					ctx.stroke();
+				}
+
+				K--;
+				if(K>=0)
+					setTimeout(go, 10);
+			}
+
+			go();
+
+
+
+
+//			q = makeAABB(100, 100, 400, 400);
+//			ctx.strokeStyle='black';
+//			ctx.strokeRect(100,100,400,400);
+//			for(var i=0; i<100; i++) {
+//				var circle = [ Math.random()*800, Math.random()*600, 20 ];
+//
+//				ctx.beginPath();
+//				ctx.arc(circle[0], circle[1], circle[2], 0, 2*Math.PI);
+//
+//				if(q.containsCircle(circle)) {
+//					ctx.fillStyle = 'black';
+//					ctx.fill();
+//				}
+//				else {
+//					ctx.strokeStyle = 'black';
+//					ctx.stroke();
+//				}
+//			}
 
 
 
