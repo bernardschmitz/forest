@@ -46,6 +46,30 @@
 			var ctx = c.getContext("2d");
 
 
+
+			function makeAABB(x, y, w, h) {
+
+				return {
+					x: x, 
+					y: y, 
+					w: w, 
+					h: h,
+					containsPoint: function(x, y) {
+						return x >= this.x && x < this.x+this.w && 
+							y >= this.y && y < this.y+this.h;	
+					},
+					containsAABB: function(aabb) {
+
+					}
+
+				};
+			}
+
+
+
+
+
+
 			function circleOverlap(c0, c1) {
 
 				var dx = c0[0] - c1[0];
@@ -78,16 +102,22 @@
 				return circle;
 			}
 
+
+
 			function generateForest(woodDensity, radius, w, h) {
 
 				var trees = [];
 
 //				console.log(w*h*woodDensity);
 
-				while(trees.length*Math.PI*radius*radius < w*h*woodDensity ) {
+				var k = 0;
+
+				while(k*Math.PI*radius*radius < w*h*woodDensity ) {
 
 					tree = placeCircleWithoutOverlap(trees, radius, w, h);
 					trees.push(tree);	
+
+					k++;
 
 //					console.log(trees.length*Math.PI*radius*radius);
 				}					
@@ -303,10 +333,25 @@
 
 				console.log(density, radius, N, draw, width, height);
 
-				runSightTests(draw, N, density, radius, ctx, width, height, 
-					function(results) { displayResults(N, results); });
+				//runSightTests(draw, N, density, radius, ctx, width, height, 
+			//		function(results) { displayResults(N, results); });
+
+				runOneTest(draw, density, radius, ctx, width, height);
+
+				var forest = generateForest(density, radius, width, height);
+				ctx.fillStyle = 'white';
+				ctx.fillRect(0,0,width,height);
+
+				drawTrees(ctx, forest, 'black');
 
 
+			}
+
+			function getRndColor() {
+			    var r = 255*Math.random()|0,
+			        g = 255*Math.random()|0,
+			        b = 255*Math.random()|0;
+			    return 'rgb(' + r + ',' + g + ',' + b + ')';
 			}
 
 		</script> 
