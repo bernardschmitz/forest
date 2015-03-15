@@ -1,11 +1,16 @@
-/*globals google */
+/*globals google ctx */
 /*eslint-env browser */
 
-//google.load("visualization", "1", {packages:["corechart"]});
-//
-//var c = document.getElementById("myCanvas");
-//var ctx = c.getContext("2d");
+function log(s) {
 
+	var r = document.getElementById('log');
+	r.textContent += '\n'+s;
+}
+
+function clearLog() {
+	var r = document.getElementById('log');
+	r.textContent = '';
+}
 
 function circleOverlap(c0, c1) {
 
@@ -31,8 +36,15 @@ function circleOverlapsAnyOtherCircle(circle, circles) {
 
 function placeCircleWithoutOverlap(circles, r, w, h) {
 
+	var attempts = 1000;
+	
 	do {
 		var circle = [ Math.random()*w, Math.random()*h, r ];
+		
+		attempts--;
+		if(attempts === 0) {
+			throw new Error('Unable to place non-overlapping circle');
+		}
 	}
 	while(circleOverlapsAnyOtherCircle(circle, circles));
 
@@ -45,8 +57,16 @@ function generateForest(woodDensity, radius, w, h) {
 
 	while(trees.length*Math.PI*radius*radius < w*h*woodDensity ) {
 
-		var tree = placeCircleWithoutOverlap(trees, radius, w, h);
-		trees.push(tree);	
+		try {
+			var tree = placeCircleWithoutOverlap(trees, radius, w, h);
+			trees.push(tree);	
+		}
+		catch(err) {
+			log(err.message);
+			var d = trees.length*Math.PI*radius*radius*100/(w*h);
+			log('Halting forest generation. Actual density: '+d.toPrecision(4)+'%');
+			return trees;
+		}
 	}					
 
 	return trees;
@@ -139,8 +159,10 @@ function canSee(from, to, trees) {
 function runOneTest(draw, density, radius, ctx, width, height) {
 
 	var forest = generateForest(density, radius, width, height);
+
 	var personA = generatePerson(forest, width, height);
 	var personB = generatePerson(forest, width, height);
+	
 	var see = canSee(personA, personB, forest);
 
 	if(draw) {
@@ -156,8 +178,6 @@ function runOneTest(draw, density, radius, ctx, width, height) {
 		else
 			drawSightLine(ctx, personA, personB, 'red');
 	}
-
-
 
 	return [see, distance(personA, personB)];
 }
@@ -175,7 +195,15 @@ function runSightTests(draw, N, density, radius, ctx, width, height, done) {
 		tests--;
 
 		if(tests >= 0) {
-			results.push(runOneTest(draw, density, radius, ctx, width, height));
+			
+			try {
+				results.push(runOneTest(draw, density, radius, ctx, width, height));
+			}
+			catch(err) {
+				log(err.message);
+				log('Unable to place person, skipping this trial.');
+			}
+			
 			setTimeout(runTests, 0);
 		}
 		else {
@@ -189,7 +217,13 @@ function runSightTests(draw, N, density, radius, ctx, width, height, done) {
 	else {
 
 		for(var i=0; i<N; i++) {
-			results.push(runOneTest(draw, density, radius, ctx, width, height));
+			try {
+				results.push(runOneTest(draw, density, radius, ctx, width, height));
+			}
+			catch(err) {
+				log(err.message);
+				log('Unable to place person, skipping this trial.');
+			}
 		}
 
 		done(results);
@@ -222,7 +256,7 @@ function drawHistogram(data) {
 }
 
 
-function displayResults(N, results) {
+function displayResults(results) {
 
 	var seen = 0;
 	for(var i=0; i<results.length; i++) {
@@ -231,21 +265,29 @@ function displayResults(N, results) {
 		}
 	}
 
-	var percent = seen*100/N;
+	var percent = seen*100/results.length;
 
-	console.log(seen, N, percent);	
+	var s = 'Friend seen '+percent.toPrecision(3)+'%';
+	log(results.length+' trials');
+	log(s);
 
 	var r = document.getElementById('results');
-	r.innerHTML = 'Friend seen '+percent.toPrecision(3)+'%';
+	r.innerHTML = s;
 
+	log('Simulation done.');
 
-	drawHistogram(results);	
+	setTimeout(function() {
+		log('Drawing histograms.');
+		drawHistogram(results);
+	},0);
+	
 }
 
 
 function run() {
 
-	console.log('run');
+	clearLog();
+	log('Starting simulation...');
 
 	var density = parseFloat(document.getElementById('density').value);
 	var radius = parseInt(document.getElementById('radius').value, 10);
@@ -257,11 +299,14 @@ function run() {
 
 	var width = 400;
 	var height = 300;
+	
+	ctx.fillStyle = 'white';
+	ctx.fillRect(0,0,width,height);
 
-	console.log(density, radius, N, draw, width, height);
+	setTimeout(function() {
+		runSightTests(draw, N, density, radius, ctx, width, height, displayResults);		
+	},0);
 
-	runSightTests(draw, N, density, radius, ctx, width, height, 
-		function(results) { displayResults(N, results); });
 
 
 }
