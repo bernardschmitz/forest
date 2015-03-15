@@ -68,14 +68,39 @@
 				return false;
 			}
 
-			function placeCircleWithoutOverlap(circles, r, w, h) {
+			function gaussianRandom() {
 
 				do {
-					var circle = [ Math.random()*w, Math.random()*h, r ];
+					var x1 = 2.0 * Math.random() - 1.0;
+					var x2 = 2.0 * Math.random() - 1.0;
+					var w = x1 * x1 + x2 * x2;
 				}
-				while(circleOverlapsAnyOtherCircle(circle, circles));
+				while( w >= 1.0 );
 
-				return circle;
+				w = Math.sqrt( (-2.0 * Math.log( w ) ) / w );
+				var y1 = x1 * w;
+				//var y2 = x2 * w;
+
+				return y1;
+			}
+
+			function placeCircleWithoutOverlap(circles, r, w, h) {
+
+				var attempt = 1000;
+
+				do {
+					attempt--;
+					var circle = [ Math.random()*w, Math.random()*h, gaussianRandom()+r ];
+				}
+				while(circleOverlapsAnyOtherCircle(circle, circles) && attempt >= 0);
+
+				if(attempt >= 0) {
+					return [true, circle];
+				}
+
+				console.log('could not place non overlaping circle');
+				return [false, null];
+
 			}
 
 			function generateForest(woodDensity, radius, w, h) {
@@ -86,8 +111,13 @@
 
 				while(trees.length*Math.PI*radius*radius < w*h*woodDensity ) {
 
-					tree = placeCircleWithoutOverlap(trees, radius, w, h);
-					trees.push(tree);	
+					var k = placeCircleWithoutOverlap(trees, radius, w, h);
+					if(!k[0]) {
+						console.log('actual density',trees.length*Math.PI*radius*radius/(w*h));
+						break;
+					}
+
+					trees.push(k[1]);	
 
 //					console.log(trees.length*Math.PI*radius*radius);
 				}					
@@ -98,7 +128,7 @@
 			
 			function generatePerson(trees, w, h) {
 
-				return placeCircleWithoutOverlap(trees, 2, w, h);
+				return placeCircleWithoutOverlap(trees, 2, w, h)[1];
 			}
 
 			function drawPerson(ctx, person, color) {
