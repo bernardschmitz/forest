@@ -12,6 +12,53 @@ function clearLog() {
 	r.textContent = '';
 }
 
+
+function makeGrid(w, h, size) {
+	
+	var grid = {
+		size : size,
+		width : w,
+		height : h,
+		cw : w / size,
+		ch : h / size,
+		items : [],
+		grid : [],
+
+		init : function() {
+
+			for(var x=0; x<this.cw; x++) {
+				this.grid[x] = [];
+				for(var y=0; y<this.ch; y++) {
+					this.grid[x][y] = [];
+				}
+			}			
+		},
+
+		addCircle : function(circle) {
+			
+//			this.items.push(circle);			
+			this.getCellContaining(circle[0], circle[1]).push(circle);
+		},
+		
+		getCell : function(cx, cy) {
+			return this.grid[cx][cy];
+		},
+		
+		getCellContaining : function(x, y) {
+
+			var cx = Math.floor(x*this.cw/this.width);
+			var cy = Math.floor(y*this.ch/this.height);
+			return this.getCell(cx, cy);
+		}
+	};
+	
+	grid.init();
+	
+	return grid;
+}
+
+
+
 function circleOverlap(c0, c1) {
 
 	var dx = c0[0] - c1[0];
@@ -86,16 +133,26 @@ function drawPerson(ctx, person, color) {
 	ctx.fill();
 }
 
+function drawCircle(ctx, x, y, r, c, fill) {	
+
+	ctx.beginPath();
+	ctx.arc(x, y, r, 0, 2*Math.PI);
+	if(fill) {
+		ctx.fillStyle = c;
+		ctx.fill();		
+	}
+	else {
+		ctx.strokeStyle = c;
+		ctx.stroke();		
+	}
+}
+
+
 function drawTrees(ctx, trees, color) {
 
 	for(var i=0; i<trees.length; i++) {
-		//ctx.moveTo(trees[i][0], trees[i][1]);
-		ctx.beginPath();
-		ctx.arc(trees[i][0], trees[i][1], trees[i][2], 0, 2*Math.PI);
-		ctx.strokeStyle = color;
-		ctx.stroke();
+		drawCircle(ctx, trees[i][0], trees[i][1], trees[i][2], color, false);
 	}
-
 }
 
 function drawSightLine(ctx, from, to, color) {
@@ -142,11 +199,16 @@ function canSee(from, to, trees) {
 
 		//console.log(p);
 
-		if(p[0] >= left-r && p[0] <= right+r && p[1] >= top-r && p[1] <= bottom+r) {
+//		drawCircle(ctx, p[0], p[1], r, 'green', true);
 
+		if(p[0] >= left-r && p[0] <= right+r && p[1] >= top-r && p[1] <= bottom+r) {
+			
+//			drawCircle(ctx, p[0], p[1], r, 'yellow', true);
+			
 			var d = distancePointLine(p, from, to); 
 			//console.log(d);
 			if(d < trees[i][2]) {
+//				drawCircle(ctx, p[0], p[1], r, 'blue', true);				
 				return false;
 			}
 		}
@@ -158,6 +220,12 @@ function canSee(from, to, trees) {
 
 function runOneTest(draw, density, radius, ctx, width, height) {
 
+
+	if(draw) {
+		ctx.fillStyle = 'white';
+		ctx.fillRect(0,0,width,height);
+	}
+		
 	var forest = generateForest(density, radius, width, height);
 
 	var personA = generatePerson(forest, width, height);
@@ -166,8 +234,6 @@ function runOneTest(draw, density, radius, ctx, width, height) {
 	var see = canSee(personA, personB, forest);
 
 	if(draw) {
-		ctx.fillStyle = 'white';
-		ctx.fillRect(0,0,width,height);
 
 		drawTrees(ctx, forest, 'black');	
 		drawPerson(ctx, personA, 'blue');
@@ -297,8 +363,8 @@ function run() {
 	var r = document.getElementById('results');
 	r.innerHTML = 'Friend seen --.-%';
 
-	var width = 400;
-	var height = 300;
+	var width = 800;
+	var height = 600;
 	
 	ctx.fillStyle = 'white';
 	ctx.fillRect(0,0,width,height);
